@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grid Spacing Function Designer</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400;9..144,0,500;9..144,0,600;9..144,1,400;9..144,1,500&family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="stylesheet" href="styles.css">
+
+  <script src="https://cdn.plot.ly/plotly-3.5.1.min.js" charset="utf-8"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body)"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div>
+      <h1>Grid spacing<br><em>function designer</em></h1>
+    </div>
+    <div class="header-rule"></div>
+    <div class="header-meta">
+      <strong>C¹ smooth.</strong> Pole at <em>x = a</em>, quadratic tail, local min at <em>x = 1</em>.
+    </div>
+  </header>
+
+  <div class="formula-card">
+    <div id="formula">
+      \[ f(x) \;=\; \textcolor{#B8442B}{\alpha}\,\frac{e^{-\textcolor{#B8442B}{k}(x-\textcolor{#B8442B}{a})}}{(x-\textcolor{#B8442B}{a})^{\textcolor{#B8442B}{p}}} \;+\; \textcolor{#B8442B}{\beta}\,(x-1)^{2} \;-\; \textcolor{#B8442B}{\delta}\,(x-1) \;+\; \textcolor{#B8442B}{\gamma} \]
+      \[ f'(x) \;=\; -\textcolor{#B8442B}{\alpha}\,\frac{e^{-\textcolor{#B8442B}{k}(x-\textcolor{#B8442B}{a})}}{(x-\textcolor{#B8442B}{a})^{\textcolor{#B8442B}{p}}}\!\left[\textcolor{#B8442B}{k} + \frac{\textcolor{#B8442B}{p}}{x-\textcolor{#B8442B}{a}}\right] \;+\; 2\textcolor{#B8442B}{\beta}\,(x-1) \;-\; \textcolor{#B8442B}{\delta} \]
+    </div>
+    <div class="constraint">
+      with \( \textcolor{#B8442B}{\delta} \;=\; -\textcolor{#B8442B}{\alpha}\,\dfrac{e^{-\textcolor{#B8442B}{k}(1-\textcolor{#B8442B}{a})}}{(1-\textcolor{#B8442B}{a})^{\textcolor{#B8442B}{p}}}\!\left[\textcolor{#B8442B}{k} + \dfrac{\textcolor{#B8442B}{p}}{1-\textcolor{#B8442B}{a}}\right] \) chosen automatically so that \( f'(1) = 0 \).
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <div class="plot-card">
+      <div id="plot"></div>
+      <div class="plot-controls">
+        <span class="group-label">show:</span>
+        <label><input type="checkbox" id="show-f" checked><span class="swatch" style="background:#B8442B"></span>f(x)</label>
+        <label><input type="checkbox" id="show-fp"><span class="swatch" style="background:#1E4D6B; border-top:1px dashed #1E4D6B"></span>derivative f′(x)</label>
+        <label><input type="checkbox" id="show-min" checked>min marker</label>
+        <label><input type="checkbox" id="show-asym" checked>asymptote</label>
+        <label><input type="checkbox" id="log-y">log y</label>
+        <span class="spacer"></span>
+        <button class="fit-btn" id="btn-fit" title="Auto-fit the view to the current function">Fit view</button>
+      </div>
+    </div>
+
+    <aside class="controls">
+
+      <div class="control-group">
+        <div class="control-header">
+          <span class="control-label"><span class="sym">a</span><span class="desc">asymptote location</span></span>
+          <span class="control-value" id="val-a">0.000</span>
+        </div>
+        <input type="range" id="param-a" min="-2" max="0.9" step="0.01" value="0">
+      </div>
+
+      <div class="control-group">
+        <div class="control-header">
+          <span class="control-label"><span class="sym">α</span><span class="desc">pole strength</span></span>
+          <span class="control-value" id="val-alpha">1.000</span>
+        </div>
+        <input type="range" id="param-alpha" min="0.001" max="10" step="0.001" value="1">
+      </div>
+
+      <div class="control-group">
+        <div class="control-header">
+          <span class="control-label"><span class="sym">p</span><span class="desc">pole order</span></span>
+          <span class="control-value" id="val-p">2.00</span>
+        </div>
+        <input type="range" id="param-p" min="0.5" max="6" step="0.1" value="2">
+      </div>
+
+      <div class="control-group">
+        <div class="control-header">
+          <span class="control-label"><span class="sym">k</span><span class="desc">spike localization</span></span>
+          <span class="control-value" id="val-k">5.00</span>
+        </div>
+        <input type="range" id="param-k" min="0" max="30" step="0.1" value="5">
+      </div>
+
+      <div class="control-group">
+        <div class="control-header">
+          <span class="control-label"><span class="sym">β</span><span class="desc">tail growth (× x²)</span></span>
+          <span class="control-value" id="val-beta">0.50</span>
+        </div>
+        <input type="range" id="param-beta" min="0.01" max="5" step="0.01" value="0.5">
+      </div>
+
+      <div class="control-group">
+        <div class="control-header">
+          <span class="control-label"><span class="sym">γ</span><span class="desc">vertical offset</span></span>
+          <span class="control-value" id="val-gamma">0.00</span>
+        </div>
+        <input type="range" id="param-gamma" min="-10" max="10" step="0.05" value="0">
+      </div>
+
+      <div class="info-box">
+        <div class="info-box-title">derived quantities</div>
+        <div class="info-row"><span class="info-label">δ (auto-computed)</span><span class="info-value" id="info-delta">—</span></div>
+        <div class="info-row"><span class="info-label">f(1) — minimum</span><span class="info-value" id="info-fmin">—</span></div>
+        <div class="info-row"><span class="info-label">f″(1) — curvature</span><span class="info-value" id="info-fpp">—</span></div>
+        <div class="info-row"><span class="info-label">f at a + 0.01·(1−a)</span><span class="info-value" id="info-fnear">—</span></div>
+        <div class="info-row"><span class="info-label">f / x² at right edge</span><span class="info-value" id="info-tail">—</span></div>
+      </div>
+
+      <div class="presets">
+        <div class="preset-label">presets</div>
+        <button class="preset" data-preset="sharp">sharp wall</button>
+        <button class="preset" data-preset="soft">soft wall</button>
+        <button class="preset" data-preset="bowl">flat bowl</button>
+        <button class="preset" data-preset="cfd">cfd-like</button>
+      </div>
+
+      <div class="button-row">
+        <button id="btn-reset">Reset</button>
+      </div>
+      <div class="export-row">
+        <span class="export-label">copy as</span>
+        <button id="btn-export-py">Python</button>
+        <button id="btn-export-m">MATLAB</button>
+      </div>
+
+    </aside>
+  </div>
+
+  <div class="notes">
+    <div>
+      <h2 class="notes-title"><small>iv. derivation</small>From properties to formula</h2>
+    </div>
+    <div>
+
+      <div class="notes-section">
+        <h4>Desired properties</h4>
+        <p>We seek a smooth function \( f:(a,\infty)\to\mathbb{R} \), parametrised by \( a<1 \), satisfying:</p>
+        <ol class="prop-list">
+          <li>a vertical asymptote at the left boundary, \( \displaystyle\lim_{x\to a^{+}} f(x) = +\infty \);</li>
+          <li>quadratic far-field growth, \( f(x) = \beta x^{2} + O(x) \) as \( x\to\infty \);</li>
+          <li>a stationary point at \( x=1 \), i.e. \( f'(1)=0 \);</li>
+          <li>localised influence of the pole: its contribution at \( x=1 \) is exponentially small.</li>
+        </ol>
+      </div>
+
+      <div class="notes-section">
+        <h4>Step 1 — singular term with localised support</h4>
+        <p>Property&nbsp;1 is realised by a pole of order \( p \), \( g_{0}(x) = \alpha\,(x-a)^{-p} \) with \( \alpha,p>0 \). Algebraic decay alone is too slow to satisfy property&nbsp;4, so we modulate by an exponential to confine the pole to a thin layer near \( x=a \):
+        \[ g(x) \;=\; \frac{\alpha\, e^{-k(x-a)}}{(x-a)^{p}}. \]
+        The function \( g \) still diverges at \( x=a \) (the polynomial dominates) and decays super-algebraically thereafter; at \( x=1 \) its contribution is suppressed by the factor \( e^{-k(1-a)} \).</p>
+      </div>
+
+      <div class="notes-section">
+        <h4>Step 2 — quadratic tail</h4>
+        <p>To impose property&nbsp;2, add \( q(x) = \beta(x-1)^{2} \). Expanding,
+        \[ \beta(x-1)^{2} \;=\; \beta x^{2} - 2\beta x + \beta, \]
+        so the leading coefficient is \( \beta \) as required; the linear and constant pieces are absorbed by the corrections that follow.</p>
+      </div>
+
+      <div class="notes-section">
+        <h4>Step 3 — linear correction enforces \( f'(1)=0 \)</h4>
+        <p>The candidate \( f(x) = g(x) + \beta(x-1)^{2} + \gamma \) has \( f'(1) = g'(1) \), since \( q'(1)=0 \). Differentiating \( g \),
+        \[ g'(x) \;=\; -\frac{\alpha\, e^{-k(x-a)}}{(x-a)^{p}}\!\left[k + \frac{p}{x-a}\right]. \]
+        Adding a linear term \( -\delta(x-1) \) leaves \( f(1) \) unchanged and shifts the slope at \( x=1 \) by \( -\delta \). Choosing
+        \[ \delta \;=\; g'(1) \;=\; -\frac{\alpha\, e^{-k(1-a)}}{(1-a)^{p}}\!\left[k + \frac{p}{1-a}\right] \]
+        gives \( f'(1)=0 \) by construction. By property&nbsp;4, \( g''(1) \) is exponentially small, so \( f''(1) \approx 2\beta > 0 \) and the stationary point is a local minimum.</p>
+      </div>
+
+      <div class="notes-section">
+        <h4>Final form</h4>
+        <p>Collecting the three pieces and the offset,
+        \[ f(x) \;=\; \frac{\alpha\, e^{-k(x-a)}}{(x-a)^{p}} \;+\; \beta(x-1)^{2} \;-\; \delta(x-1) \;+\; \gamma, \]
+        which is \( C^{\infty} \) on \( (a,\infty) \) and satisfies properties 1–4 by construction.</p>
+      </div>
+
+      <div class="notes-section">
+        <h4>What the parameters do</h4>
+        <p>\( \alpha \) sets the magnitude of the singular term, and \( p \) its order. \( k \) controls the rate at which the pole's influence decays into the domain: larger \( k \) yields a thinner spike near \( x=a \) and a flatter plateau on the rest of \( (a,1) \). \( \beta \) is the leading far-field coefficient, and \( \gamma \) is a vertical offset. The remaining parameter \( \delta \) is not free — it is fixed in closed form by the others through the requirement \( f'(1)=0 \).</p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">copied to clipboard</div>
+
+</body>
+</html>
