@@ -226,27 +226,36 @@ function onRelayout(e) {
 function bindRange(id, key, valId, fmt) {
   const slider = document.getElementById(id);
   const input = document.getElementById(valId);
+  if (!slider || !input) {
+    console.warn('bindRange: missing element', { id, valId });
+    return;
+  }
   const min = parseFloat(slider.min);
   const max = parseFloat(slider.max);
 
-  slider.addEventListener('input', () => {
-    params[key] = parseFloat(slider.value);
-    input.value = fmt(params[key]);
+  const syncFromSlider = () => {
+    const v = parseFloat(slider.value);
+    params[key] = v;
+    input.value = fmt(v);
     buildPlot();
-  });
+  };
+  slider.addEventListener('input', syncFromSlider);
+  slider.addEventListener('change', syncFromSlider);
 
-  input.addEventListener('change', () => {
+  const syncFromInput = (commit) => {
     let v = parseFloat(input.value);
     if (!Number.isFinite(v)) {
-      input.value = fmt(params[key]);
+      if (commit) input.value = fmt(params[key]);
       return;
     }
     v = Math.min(max, Math.max(min, v));
     params[key] = v;
     slider.value = v;
-    input.value = fmt(v);
+    if (commit) input.value = fmt(v);
     buildPlot();
-  });
+  };
+  input.addEventListener('input', () => syncFromInput(false));
+  input.addEventListener('change', () => syncFromInput(true));
 
   input.value = fmt(params[key]);
 }
