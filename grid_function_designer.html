@@ -60,15 +60,15 @@
       <div class="control-group">
         <div class="control-header">
           <span class="control-label"><span class="sym">a</span><span class="desc">asymptote location</span></span>
-          <span class="control-value" id="val-a">0.000</span>
+          <input type="number" class="control-value" id="val-a" step="any" min="0" max="0.99" value="0">
         </div>
-        <input type="range" id="param-a" min="-2" max="0.9" step="0.01" value="0">
+        <input type="range" id="param-a" min="0" max="0.99" step="0.01" value="0">
       </div>
 
       <div class="control-group">
         <div class="control-header">
           <span class="control-label"><span class="sym">α</span><span class="desc">pole strength</span></span>
-          <span class="control-value" id="val-alpha">1.000</span>
+          <input type="number" class="control-value" id="val-alpha" step="any" min="0.001" max="10" value="1">
         </div>
         <input type="range" id="param-alpha" min="0.001" max="10" step="0.001" value="1">
       </div>
@@ -76,7 +76,7 @@
       <div class="control-group">
         <div class="control-header">
           <span class="control-label"><span class="sym">p</span><span class="desc">pole order</span></span>
-          <span class="control-value" id="val-p">2.00</span>
+          <input type="number" class="control-value" id="val-p" step="any" min="0.5" max="6" value="2">
         </div>
         <input type="range" id="param-p" min="0.5" max="6" step="0.1" value="2">
       </div>
@@ -84,7 +84,7 @@
       <div class="control-group">
         <div class="control-header">
           <span class="control-label"><span class="sym">k</span><span class="desc">spike localization</span></span>
-          <span class="control-value" id="val-k">5.00</span>
+          <input type="number" class="control-value" id="val-k" step="any" min="0" max="30" value="5">
         </div>
         <input type="range" id="param-k" min="0" max="30" step="0.1" value="5">
       </div>
@@ -92,7 +92,7 @@
       <div class="control-group">
         <div class="control-header">
           <span class="control-label"><span class="sym">β</span><span class="desc">tail growth (× x²)</span></span>
-          <span class="control-value" id="val-beta">0.50</span>
+          <input type="number" class="control-value" id="val-beta" step="any" min="0.01" max="5" value="0.5">
         </div>
         <input type="range" id="param-beta" min="0.01" max="5" step="0.01" value="0.5">
       </div>
@@ -100,7 +100,7 @@
       <div class="control-group">
         <div class="control-header">
           <span class="control-label"><span class="sym">γ</span><span class="desc">vertical offset</span></span>
-          <span class="control-value" id="val-gamma">0.00</span>
+          <input type="number" class="control-value" id="val-gamma" step="any" min="-10" max="10" value="0">
         </div>
         <input type="range" id="param-gamma" min="-10" max="10" step="0.05" value="0">
       </div>

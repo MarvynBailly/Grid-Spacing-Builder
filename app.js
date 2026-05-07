@@ -224,14 +224,31 @@ function onRelayout(e) {
 }
 
 function bindRange(id, key, valId, fmt) {
-  const el = document.getElementById(id);
-  const valEl = document.getElementById(valId);
-  el.addEventListener('input', () => {
-    params[key] = parseFloat(el.value);
-    valEl.textContent = fmt(params[key]);
+  const slider = document.getElementById(id);
+  const input = document.getElementById(valId);
+  const min = parseFloat(slider.min);
+  const max = parseFloat(slider.max);
+
+  slider.addEventListener('input', () => {
+    params[key] = parseFloat(slider.value);
+    input.value = fmt(params[key]);
     buildPlot();
   });
-  valEl.textContent = fmt(params[key]);
+
+  input.addEventListener('change', () => {
+    let v = parseFloat(input.value);
+    if (!Number.isFinite(v)) {
+      input.value = fmt(params[key]);
+      return;
+    }
+    v = Math.min(max, Math.max(min, v));
+    params[key] = v;
+    slider.value = v;
+    input.value = fmt(v);
+    buildPlot();
+  });
+
+  input.value = fmt(params[key]);
 }
 
 bindRange('param-a',     'a',     'val-a',     v => v.toFixed(3));
@@ -253,12 +270,12 @@ function applyParams(P) {
   document.getElementById('param-k').value     = params.k;
   document.getElementById('param-beta').value  = params.beta;
   document.getElementById('param-gamma').value = params.gamma;
-  document.getElementById('val-a').textContent     = params.a.toFixed(3);
-  document.getElementById('val-alpha').textContent = params.alpha.toFixed(3);
-  document.getElementById('val-p').textContent     = params.p.toFixed(2);
-  document.getElementById('val-k').textContent     = params.k.toFixed(2);
-  document.getElementById('val-beta').textContent  = params.beta.toFixed(2);
-  document.getElementById('val-gamma').textContent = params.gamma.toFixed(2);
+  document.getElementById('val-a').value     = params.a.toFixed(3);
+  document.getElementById('val-alpha').value = params.alpha.toFixed(3);
+  document.getElementById('val-p').value     = params.p.toFixed(2);
+  document.getElementById('val-k').value     = params.k.toFixed(2);
+  document.getElementById('val-beta').value  = params.beta.toFixed(2);
+  document.getElementById('val-gamma').value = params.gamma.toFixed(2);
   buildPlot();
 }
 
