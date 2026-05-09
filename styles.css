@@ -118,6 +118,7 @@ h1 em {
 }
 .constraint .katex { font-size: 1em; }
 
+
 .main-grid {
   display: grid;
   grid-template-columns: 1fr 340px;
@@ -227,6 +228,41 @@ h1 em {
   height: 2px;
   margin-right: 4px;
   vertical-align: middle;
+}
+.plot-controls .swatch-tick {
+  width: 10px;
+  height: 10px;
+  background:
+    linear-gradient(var(--accent-2), var(--accent-2)) 0 0/2px 100% no-repeat,
+    linear-gradient(var(--accent-2), var(--accent-2)) 4px 0/2px 100% no-repeat,
+    linear-gradient(var(--accent-2), var(--accent-2)) 8px 0/2px 100% no-repeat;
+}
+.plot-controls .grid-n-label {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-muted);
+  gap: 6px;
+}
+.plot-controls .grid-n-input {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  padding: 2px 6px;
+  width: 56px;
+  text-align: right;
+  -moz-appearance: textfield;
+}
+.plot-controls .grid-n-input::-webkit-outer-spin-button,
+.plot-controls .grid-n-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.plot-controls .grid-n-input:focus {
+  outline: none;
+  border-color: var(--accent-2);
 }
 
 .controls {

@@ -50,6 +50,8 @@
         <label><input type="checkbox" id="show-min" checked>min marker</label>
         <label><input type="checkbox" id="show-asym" checked>asymptote</label>
         <label><input type="checkbox" id="log-y">log y</label>
+        <label><input type="checkbox" id="show-grid"><span class="swatch swatch-tick"></span>EL grid</label>
+        <label class="grid-n-label">N <input type="number" class="grid-n-input" id="grid-n" min="3" max="200" step="1" value="25"></label>
         <span class="spacer"></span>
         <button class="fit-btn" id="btn-fit" title="Auto-fit the view to the current function">Fit view</button>
       </div>
@@ -112,6 +114,8 @@
         <div class="info-row"><span class="info-label">f″(1) — curvature</span><span class="info-value" id="info-fpp">—</span></div>
         <div class="info-row"><span class="info-label">f at a + 0.01·(1−a)</span><span class="info-value" id="info-fnear">—</span></div>
         <div class="info-row"><span class="info-label">f / x² at right edge</span><span class="info-value" id="info-tail">—</span></div>
+        <div class="info-row"><span class="info-label">EL constant C = ∫√f</span><span class="info-value" id="info-elc">—</span></div>
+        <div class="info-row"><span class="info-label">mean grid spacing C/(N−1)</span><span class="info-value" id="info-eldx">—</span></div>
       </div>
 
       <div class="presets">
@@ -184,6 +188,56 @@
       <div class="notes-section">
         <h4>What the parameters do</h4>
         <p>\( \alpha \) sets the magnitude of the singular term, and \( p \) its order. \( k \) controls the rate at which the pole's influence decays into the domain: larger \( k \) yields a thinner spike near \( x=a \) and a flatter plateau on the rest of \( (a,1) \). \( \beta \) is the leading far-field coefficient, and \( \gamma \) is a vertical offset. The remaining parameter \( \delta \) is not free — it is fixed in closed form by the others through the requirement \( f'(1)=0 \).</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="notes">
+    <div>
+      <h2 class="notes-title"><small>v. euler–lagrange</small>From spacing to grid</h2>
+    </div>
+    <div>
+
+      <div class="notes-section">
+        <h4>Variational setup</h4>
+        <p>Given the target spacing \( f(x) \) on \( (a,\infty) \), seek a coordinate map \( x:[0,1]\to(a,\infty) \), \(\xi\mapsto x(\xi)\), that minimises the weighted action
+        \[ S[x] \;=\; \int_{0}^{1} L\bigl(x(\xi),\,x'(\xi)\bigr)\,d\xi, \qquad L \;=\; \tfrac{1}{2}\,f(x)\,(x')^{2}, \]
+        with boundary conditions \( x(0)=x_{L} \) and \( x(1)=x_{R} \). The factor \( f(x) \) penalises large \( |x'| \) where the desired spacing is large, so minimisers naturally bunch grid points where \( f \) is small.</p>
+      </div>
+
+      <div class="notes-section">
+        <h4>Computing the Euler–Lagrange equation</h4>
+        <p>The conjugate momentum and the gradient of \( L \) are
+        \[ \frac{\partial L}{\partial x'} \;=\; f(x)\,x', \qquad \frac{\partial L}{\partial x} \;=\; \tfrac{1}{2}\,f'(x)\,(x')^{2}. \]
+        Differentiating the momentum along \( \xi \) using the chain rule,
+        \[ \frac{d}{d\xi}\!\left(f(x)\,x'\right) \;=\; f'(x)\,(x')^{2} \;+\; f(x)\,x''. \]
+        The Euler–Lagrange equation \( \tfrac{d}{d\xi}(\partial L/\partial x') - \partial L/\partial x = 0 \) therefore reads
+        \[ \boxed{\;f(x)\,x''(\xi) \;+\; \tfrac{1}{2}\,f'(x)\,\bigl(x'(\xi)\bigr)^{2} \;=\; 0\;}\quad\Longleftrightarrow\quad x''+\frac{f'(x)}{2\,f(x)}\,(x')^{2}=0. \]
+        </p>
+      </div>
+
+      <div class="notes-section">
+        <h4>Gauge invariance: what if \( L = f(x)(x')^{2} - 1 \)?</h4>
+        <p>The new Lagrangian is just \( \tilde L = 2L - 1 \), an affine reparametrisation. Recompute from scratch:
+        \[ \frac{\partial \tilde L}{\partial x'} \;=\; 2\,f(x)\,x', \qquad \frac{\partial \tilde L}{\partial x} \;=\; f'(x)\,(x')^{2}, \]
+        so
+        \[ \frac{d}{d\xi}\!\left(2 f x'\right) - f'(x')^{2} \;=\; 2 f'(x')^{2} + 2 f x'' - f'(x')^{2} \;=\; f'(x')^{2} + 2 f x'' \;=\; 0, \]
+        which after dividing by \( 2f \) is <em>identical</em> to the previous Euler–Lagrange equation. This is no accident: the EL operator is linear, \( \mathrm{EL}[aL+b]=a\,\mathrm{EL}[L] \), so multiplying \( L \) by a nonzero scalar and adding any constant — or, more generally, adding a total derivative \( dF/d\xi \) — leaves the equation of motion unchanged. The \( -1 \) shifts the value of the action by a constant \( -(\xi_{1}-\xi_{0}) \), which the variation does not see.</p>
+      </div>
+
+      <div class="notes-section">
+        <h4>First integral and equidistribution</h4>
+        <p>Because \( L \) has no explicit \( \xi \)-dependence, the EL equation admits a Beltrami first integral. Multiplying \( f x'' + \tfrac{1}{2} f'(x')^{2}=0 \) by \( x'/\sqrt{f} \) and rearranging gives \( \tfrac{d}{d\xi}\!\bigl(\sqrt{f(x)}\,x'\bigr) = 0 \), so
+        \[ \sqrt{f(x)}\,x'(\xi) \;=\; C \quad\text{(constant)}. \]
+        Separating variables and integrating from \( x_{L} \) to \( x(\xi) \),
+        \[ \int_{x_{L}}^{x(\xi)} \sqrt{f(s)}\;ds \;=\; C\,\xi, \qquad C \;=\; \int_{x_{L}}^{x_{R}} \sqrt{f(s)}\;ds, \]
+        which is the equidistribution principle: the cumulative \( \sqrt{f} \)-arc length of the physical interval is partitioned equally among the \( \xi \)-cells. The constant \( C \) is reported in the side panel.</p>
+      </div>
+
+      <div class="notes-section">
+        <h4>Numerical inversion</h4>
+        <p>The tick marks on the plot are obtained by computing \( s(x)=\int_{x_{L}}^{x}\!\sqrt{f}\;ds \) once on a fine uniform mesh by cumulative trapezoidal quadrature, then solving \( s(x_{i})=\tfrac{i}{N-1}\,C \) for \( i=0,\dots,N-1 \) by linear interpolation in the inverse direction. Near the pole at \( x=a \) the integrand \( \sqrt{f} \sim \sqrt{\alpha}\,(x-a)^{-p/2} \) is integrable only for \( p<2 \); the implementation guards by starting the mesh at \( x_{L}=a+10^{-3}(x_{\max}-a) \), so \( C \) stays finite for all admissible \( p \).</p>
       </div>
 
     </div>

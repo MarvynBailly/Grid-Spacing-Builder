@@ -35,6 +35,50 @@ function fppEval(x, P) {
   return (fpEval(x + h, P) - fpEval(x - h, P)) / (2 * h);
 }
 
+// Equidistribution from the Euler–Lagrange first integral √f(x)·x'(ξ) = C.
+// Cumulative-trapezoidal of √f on a fine mesh, then invert at uniform ξ_i.
+function computeEqGrid(P, N, xmax) {
+  const span = xmax - P.a;
+  const xL = P.a + Math.max(1e-6, 1e-3 * span);
+  const M = 4001;
+  const dx = (xmax - xL) / (M - 1);
+  let prevSqrt = 0;
+  {
+    const v = fEval(xL, P);
+    prevSqrt = (Number.isFinite(v) && v > 0) ? Math.sqrt(v) : 0;
+  }
+  const xs = new Float64Array(M);
+  const s  = new Float64Array(M);
+  xs[0] = xL;
+  s[0] = 0;
+  for (let i = 1; i < M; i++) {
+    const x = xL + i * dx;
+    const v = fEval(x, P);
+    const sq = (Number.isFinite(v) && v > 0) ? Math.sqrt(v) : 0;
+    xs[i] = x;
+    s[i] = s[i - 1] + 0.5 * (prevSqrt + sq) * dx;
+    prevSqrt = sq;
+  }
+  const C = s[M - 1];
+  const grid = new Array(N);
+  if (!(C > 0) || !Number.isFinite(C)) {
+    for (let i = 0; i < N; i++) grid[i] = xL + (i / (N - 1)) * (xmax - xL);
+    return { grid, C: NaN, xL };
+  }
+  let j = 0;
+  for (let i = 0; i < N; i++) {
+    const target = (i / (N - 1)) * C;
+    while (j < M - 2 && s[j + 1] < target) j++;
+    const ds = s[j + 1] - s[j];
+    grid[i] = ds > 0
+      ? xs[j] + (target - s[j]) / ds * (xs[j + 1] - xs[j])
+      : xs[j];
+  }
+  grid[0] = xL;
+  grid[N - 1] = xmax;
+  return { grid, C, xL };
+}
+
 let userView = null;
 let programmatic = false;
 let plotReady = false;
@@ -50,6 +94,10 @@ function buildPlot() {
   const fnear = fEval(xnear, P);
   const fmax  = fEval(xmax, P);
 
+  const showGrid = document.getElementById('show-grid').checked;
+  const gridN = Math.max(3, Math.min(200, parseInt(document.getElementById('grid-n').value, 10) || 25));
+  const gridInfo = computeEqGrid(P, gridN, xmax);
+
   document.getElementById('info-delta').textContent = P.deltaVal.toExponential(3);
   document.getElementById('info-fmin').textContent  = fmin.toFixed(4);
   const fppEl = document.getElementById('info-fpp');
@@ -57,6 +105,8 @@ function buildPlot() {
   fppEl.classList.toggle('warn', fpp1 <= 0);
   document.getElementById('info-fnear').textContent = fnear.toExponential(2);
   document.getElementById('info-tail').textContent  = (fmax / (xmax * xmax)).toFixed(4);
+  document.getElementById('info-elc').textContent   = Number.isFinite(gridInfo.C) ? gridInfo.C.toFixed(4) : '∞';
+  document.getElementById('info-eldx').textContent  = Number.isFinite(gridInfo.C) ? (gridInfo.C / (gridN - 1)).toExponential(2) : '—';
 
   const N = 1400;
   const xs = [], ys = [], yps = [];
@@ -132,6 +182,21 @@ function buildPlot() {
     text: '  x = 1', showarrow: false,
     font: { family: 'Fraunces, serif', size: 13, color: '#1A1A1A' },
   });
+
+  if (showGrid) {
+    for (const xg of gridInfo.grid) {
+      shapes.push({
+        type: 'line', x0: xg, x1: xg, y0: 0, y1: 0.045, yref: 'paper',
+        line: { color: '#1E4D6B', width: 1 },
+      });
+    }
+    annotations.push({
+      x: gridInfo.grid[gridInfo.grid.length - 1], y: 0.05, yref: 'paper',
+      xanchor: 'right', yanchor: 'bottom',
+      text: `<i>x</i>(ξ<sub>i</sub>), N=${gridN}`, showarrow: false,
+      font: { family: 'Fraunces, serif', size: 12, color: '#1E4D6B' },
+    });
+  }
 
   const axis = {
     gridcolor: '#E5DEC9',
@@ -226,36 +291,27 @@ function onRelayout(e) {
 function bindRange(id, key, valId, fmt) {
   const slider = document.getElementById(id);
   const input = document.getElementById(valId);
-  if (!slider || !input) {
-    console.warn('bindRange: missing element', { id, valId });
-    return;
-  }
   const min = parseFloat(slider.min);
   const max = parseFloat(slider.max);
 
-  const syncFromSlider = () => {
-    const v = parseFloat(slider.value);
-    params[key] = v;
-    input.value = fmt(v);
+  slider.addEventListener('input', () => {
+    params[key] = parseFloat(slider.value);
+    input.value = fmt(params[key]);
     buildPlot();
-  };
-  slider.addEventListener('input', syncFromSlider);
-  slider.addEventListener('change', syncFromSlider);
+  });
 
-  const syncFromInput = (commit) => {
+  input.addEventListener('change', () => {
     let v = parseFloat(input.value);
     if (!Number.isFinite(v)) {
-      if (commit) input.value = fmt(params[key]);
+      input.value = fmt(params[key]);
       return;
     }
     v = Math.min(max, Math.max(min, v));
     params[key] = v;
     slider.value = v;
-    if (commit) input.value = fmt(v);
+    input.value = fmt(v);
     buildPlot();
-  };
-  input.addEventListener('input', () => syncFromInput(false));
-  input.addEventListener('change', () => syncFromInput(true));
+  });
 
   input.value = fmt(params[key]);
 }
@@ -267,9 +323,12 @@ bindRange('param-k',     'k',     'val-k',     v => v.toFixed(2));
 bindRange('param-beta',  'beta',  'val-beta',  v => v.toFixed(2));
 bindRange('param-gamma', 'gamma', 'val-gamma', v => v.toFixed(2));
 
-['show-f', 'show-fp', 'show-min', 'show-asym', 'log-y'].forEach(id => {
+['show-f', 'show-fp', 'show-min', 'show-asym', 'log-y', 'show-grid'].forEach(id => {
   document.getElementById(id).addEventListener('change', buildPlot);
 });
+
+document.getElementById('grid-n').addEventListener('input', buildPlot);
+document.getElementById('grid-n').addEventListener('change', buildPlot);
 
 function applyParams(P) {
   Object.assign(params, P);
